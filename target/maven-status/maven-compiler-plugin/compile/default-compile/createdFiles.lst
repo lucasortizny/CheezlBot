@@ -1,0 +1,8 @@
+nyc\pikaboy\data\CheezlQuote.class
+nyc\pikaboy\listeners\CheezlSlashCommandListener.class
+nyc\pikaboy\listeners\SomeCustomListener.class
+nyc\pikaboy\internalcommands\RandomQuoteCommand.class
+nyc\pikaboy\Main.class
+nyc\pikaboy\data\CheezlQuoteMethods.class
+nyc\pikaboy\settings\Settings.class
+nyc\pikaboy\settings\SettingsGeneration.class
