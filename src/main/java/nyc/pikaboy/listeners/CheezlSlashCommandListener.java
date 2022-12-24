@@ -6,23 +6,25 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import nyc.pikaboy.Main;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteMethods;
+import nyc.pikaboy.internalcommands.CheezlSlashCommands;
 import org.jetbrains.annotations.NotNull;
 
 public class CheezlSlashCommandListener extends ListenerAdapter {
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(SlashCommandEvent event) {
+        System.out.println("Reached Slash Command");
         switch (event.getName()){
             case "newquote":
-                event.deferReply(true).queue();
-                try {
-                    String keyname = event.getOption("quote-key").getAsString();
-                    String quote = event.getOption("quote").getAsString();
-                    CheezlQuoteMethods.addCheezlQuote(Main.SETTINGS, new CheezlQuote(keyname, quote));
-                    event.getHook().sendMessage("Successfully stored.").queue();
+                System.out.println("Reached the newquote");
+                CheezlSlashCommands.newQuote(event);
+                break;
+            case "removequote":
+                CheezlSlashCommands.removeQuote(event);
+                break;
+            case "listquotes":
+                CheezlSlashCommands.listQuotes(event);
+                break;
 
-                } catch (Exception e){
-                    System.out.println("Command invokation failed. Not doing anything :(");
-                }
         }
     }
 }

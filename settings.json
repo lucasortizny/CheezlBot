@@ -1,8 +1,8 @@
 {
-  "discordToken": "MTA1NDU2MTk0MDE0OTY0MTI4Nw.G3f8h1.TXg7MGlbFQ5Cma0enSoX7dtkpIbEGtYdrR7Zeo",
-  "guildId": "458721282620522499",
+  "discordToken": "MTA1NTk5ODMxMTMzODg4OTI5Ng.GdR3Oo.MTA3xMcJZajh38uKfFO-3Alf3I0Q2Ilbw4v8MU",
+  "guildId": "1044843245408112672",
   "allowedTextChannels": [
-    "938190971772993617"
+    "1044843245970133025"
   ],
   "cheezlQuotesList": [
     {
@@ -60,6 +60,30 @@
     {
       "quoteKeyName": "cocaine",
       "quote": "I had like STL um LSD, all at the same time. And cocaine."
+    },
+    {
+      "quoteKeyName": "test",
+      "quote": "test"
+    },
+    {
+      "quoteKeyName": "test",
+      "quote": "test"
+    },
+    {
+      "quoteKeyName": "testing",
+      "quote": "does this work?"
+    },
+    {
+      "quoteKeyName": "Something",
+      "quote": "Something else"
+    },
+    {
+      "quoteKeyName": "Some Quote",
+      "quote": "Does this quote by cheezl work?"
+    },
+    {
+      "quoteKeyName": "test1",
+      "quote": "test1"
     }
   ],
   "randomizerBounds": 25

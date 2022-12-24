@@ -49,14 +49,18 @@ public class Main {
             logger.info("Converting to local Settings file...");
             SETTINGS = SettingsGeneration.getExistingSettings(gson, settingsDestination);
             logger.info(String.format("Registering JDA Bot with token %s", SETTINGS.getDiscordToken()));
-            jda = JDABuilder.createDefault(SETTINGS.getDiscordToken()).addEventListeners(new SomeCustomListener(), new CheezlSlashCommandListener())
+            jda = JDABuilder.createDefault(SETTINGS.getDiscordToken())
+                    .addEventListeners(new SomeCustomListener(), new CheezlSlashCommandListener())
                     .build().awaitReady();
 
             jda.getGuildById(SETTINGS.getGuildId()).updateCommands().addCommands(
                     new CommandData("newquote", "Add a new quote to the Cheezl bot!")
                             .addOption(OptionType.STRING, "quote-key", "Name to be referenced internally within the Bot", true)
-                            .addOption(OptionType.STRING, "quote", "Quote from good ol' cheezl~", true)
-            ).queue();
+                            .addOption(OptionType.STRING, "quote", "Quote from good ol' cheezl~", true),
+                    new CommandData("removequote", "Remove an existing quote by key-name.")
+                            .addOption(OptionType.STRING, "quote-key", "The key-name of the associated quote.", true),
+                    new CommandData("listquotes", "List all existing quotes and their key-names."))
+                    .queue();
 
         } catch (Exception e){
 
