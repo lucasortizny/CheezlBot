@@ -2,29 +2,28 @@ import nyc.pikaboy.data.WGClient;
 import nyc.pikaboy.data.WGClientCollection;
 import nyc.pikaboy.wireguard.WGConnect;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
 public class WGClientTest {
-    WGConnect client;
-    WGClientCollection referCollection;
+    static WGConnect client;
+    static WGClientCollection referCollection;
 
-    ArrayList<String> testClientNames;
+    static ArrayList<String> testClientNames;
 
-    @Before
-    public void setUp(){
+    @BeforeClass
+    public static void setUp(){
         client = new WGConnect("http://10.0.0.23:51821", "PokettoMonster0912");
         referCollection = new WGClientCollection();
         referCollection.getWGClients()
                 .add(new WGClient("10.8.0.2", "2022-11-24T04:55:21.487Z", false, "71e472c9-5ec8-4589-95a3-8a5289d2e0c3",
                         "cheezl-ny-pikaboy", "5G3o0y43dWz4FTUju5VnVmHk2hu5qpyRBsYcFwjBcBI=", "2022-12-29T16:58:53.973Z"));
         testClientNames = new ArrayList<>();
-        for (int i = 0; i < 5; i++){
+        for (int i = 0; i < 50; i++){
             testClientNames.add(UUID.randomUUID().toString());
-//            testClientNames.add(String.valueOf(i));
         }
     }
 
@@ -69,8 +68,15 @@ public class WGClientTest {
         });
         // Now retrieve the client list and compare.
         WGClientCollection collectedClients = client.getClientCollection();
-        collectedClients.getWGClients().forEach((client) -> {
-            Assert.assertTrue(testClientNames.contains(client.getName()));
+        testClientNames.forEach((clientname) -> {
+           Assert.assertTrue(collectedClients.getWGClients().parallelStream().anyMatch((client) -> client.getName().equals(clientname)));
+        });
+    }
+    @Test
+    public void testWGClientDeletion(){
+        testClientNames.forEach((clientname) -> {
+            System.out.println("Client name: " + clientname);
+           Assert.assertEquals(204, client.deleteClientByName(clientname));
         });
     }
 
