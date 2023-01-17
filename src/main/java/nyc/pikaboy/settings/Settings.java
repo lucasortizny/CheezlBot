@@ -1,5 +1,7 @@
 package nyc.pikaboy.settings;
 
+import lombok.Getter;
+import lombok.Setter;
 import nyc.pikaboy.data.CheezlQuote;
 
 import java.util.ArrayList;
@@ -8,55 +10,59 @@ import java.util.List;
 /**
  * Settings files for the Cheezl Bot
  */
+@Getter
+@Setter
 public class Settings {
     private String discordToken = "";
     private String guildId = "";
     public List<String> allowedTextChannels = new ArrayList<>();
     public List<CheezlQuote> cheezlQuotesList = new ArrayList<>();
 
-    public int randomizerBounds = 25;
+    public int randomizerBounds = 2;
+    public String wireguarduri;
+    public String wireguardPassword;
 
 
-    public String getGuildId() {
-        return guildId;
-    }
-
-    public void setGuildId(String guildId) {
-        this.guildId = guildId;
-    }
-
-    public int getRandomizerBounds() {
-        return randomizerBounds;
-    }
-
-    public void setRandomizerBounds(int randomizerBounds) {
-        this.randomizerBounds = randomizerBounds;
-    }
-
-
-    public List<String> getAllowedTextChannels() {
-        return allowedTextChannels;
-    }
-
-    public void setAllowedTextChannels(List<String> allowedTextChannels) {
-        this.allowedTextChannels = allowedTextChannels;
-    }
-
-    public List<CheezlQuote> getCheezlQuotesList() {
-        return cheezlQuotesList;
-    }
-
-    public void setCheezlQuotesList(List<CheezlQuote> cheezlQuotesList) {
-        this.cheezlQuotesList = cheezlQuotesList;
-    }
-
-    public String getDiscordToken() {
-        return discordToken;
-    }
-
-    public void setDiscordToken(String discordToken) {
-        this.discordToken = discordToken;
-    }
+//    public String getGuildId() {
+//        return guildId;
+//    }
+//
+//    public void setGuildId(String guildId) {
+//        this.guildId = guildId;
+//    }
+//
+//    public int getRandomizerBounds() {
+//        return randomizerBounds;
+//    }
+//
+//    public void setRandomizerBounds(int randomizerBounds) {
+//        this.randomizerBounds = randomizerBounds;
+//    }
+//
+//
+//    public List<String> getAllowedTextChannels() {
+//        return allowedTextChannels;
+//    }
+//
+//    public void setAllowedTextChannels(List<String> allowedTextChannels) {
+//        this.allowedTextChannels = allowedTextChannels;
+//    }
+//
+//    public List<CheezlQuote> getCheezlQuotesList() {
+//        return cheezlQuotesList;
+//    }
+//
+//    public void setCheezlQuotesList(List<CheezlQuote> cheezlQuotesList) {
+//        this.cheezlQuotesList = cheezlQuotesList;
+//    }
+//
+//    public String getDiscordToken() {
+//        return discordToken;
+//    }
+//
+//    public void setDiscordToken(String discordToken) {
+//        this.discordToken = discordToken;
+//    }
 
     public Settings (){
         // Instantiate Default Values
@@ -80,9 +86,9 @@ public class Settings {
 
     }
 
-    public Settings (List<String> allowedTextChannels, List<CheezlQuote> cheezlQuotesList){
-        this.allowedTextChannels = allowedTextChannels;
-        this.cheezlQuotesList = cheezlQuotesList;
-    }
+//    public Settings (List<String> allowedTextChannels, List<CheezlQuote> cheezlQuotesList){
+//        this.allowedTextChannels = allowedTextChannels;
+//        this.cheezlQuotesList = cheezlQuotesList;
+//    }
 
 }

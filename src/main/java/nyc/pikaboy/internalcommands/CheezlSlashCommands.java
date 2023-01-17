@@ -1,13 +1,14 @@
 package nyc.pikaboy.internalcommands;
 
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import nyc.pikaboy.Main;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteMethods;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -83,17 +84,61 @@ public class CheezlSlashCommands {
             event.getHook().editOriginal("Building Message to send via DMs").queue();
             StringBuilder strbuilder = new StringBuilder();
             Main.SETTINGS.getCheezlQuotesList().forEach(quote ->{
-                strbuilder.append(String.format("**Quote Key**: %s \nQuote: %s\n", quote.getQuoteKeyName(), quote.getQuote()));
-                strbuilder.append("\n");
+                String append = String.format("**Quote Key**: %s \nQuote: %s\n\n", quote.getQuoteKeyName(), quote.getQuote());
+                if ((strbuilder.length() + append.length()) > 2000){
+                    try {
+                        event.getUser().openPrivateChannel().queue((message) -> {
+                            message.sendMessage(strbuilder.toString()).queue();
+                        });
+                        Thread.sleep(600L);
+                        strbuilder.delete(0, strbuilder.length());
+
+                    } catch (Exception e){
+                        System.out.println("Normal exception reached. Continue.");
+                    }
+                    // Send message in order to clear the String builder.
+
+                }
+                // At this point we assume the String Builder is OK!
+
+                strbuilder.append(append);
             });
-            event.getUser().openPrivateChannel().flatMap(message -> {
-                message.sendMessage(strbuilder.toString()).queue();
-                return null;
-            }).queue();
+            // If we reach here and our String Builder still has strings, let's flush it and get it over with.
+            if (!strbuilder.isEmpty()){
+                event.getUser().openPrivateChannel().queue((message) -> {
+                    message.sendMessage(strbuilder.toString()).queue();
+                });
+            }
+
             event.getHook().editOriginal("Message sent via DMs.").queue();
         } catch (Exception e){
             event.getHook().editOriginal("Quotes aggregation failed. Contact bot owner.").queueAfter(2L, TimeUnit.SECONDS);
             e.printStackTrace();
+        }
+
+    }
+
+    public static void getVPN(SlashCommandEvent event){
+        event.deferReply(true).queue();
+        try {
+            String name = UUID.randomUUID().toString();
+            Main.client.createClient(name);
+//            event.getHook().sendFile(Main.client.getClientConfiguration(Main.client.getClientIdByName(name))).queue();
+            event.getUser().openPrivateChannel().queue((privateChannel -> {
+                File configurationFile = Main.client.getClientConfiguration(Main.client.getClientIdByName(name));
+                try {
+                    Thread.sleep(200L);
+                    System.out.println("Does file exist: " + configurationFile.exists());
+                    privateChannel.sendFile(configurationFile).queue();
+                    Thread.sleep(1000L);
+                    configurationFile.delete();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }));
+            event.getHook().editOriginal("Client configuration sent.").queue();
+        } catch (Exception e){
+            event.getHook().setEphemeral(true).sendMessage("VPN provisioning failed.").queue();
         }
 
     }

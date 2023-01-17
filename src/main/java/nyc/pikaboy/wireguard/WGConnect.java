@@ -5,12 +5,13 @@ import com.google.gson.GsonBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.dv8tion.jda.api.events.http.HttpRequestEvent;
 import nyc.pikaboy.data.SessionLogin;
 import nyc.pikaboy.data.WGClient;
 import nyc.pikaboy.data.WGClientCollection;
 import nyc.pikaboy.data.WGClientCreation;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -82,21 +83,9 @@ public class WGConnect {
      */
 
     public WGClientCollection getClientCollection(){
-        String loginCookie = "";
-        try {
-            loginCookie = this.loginSession().headers().firstValue("set-cookie").get();
-            Thread.sleep(500L);
-
-        } catch (InterruptedException e){
-            e.printStackTrace();
-            System.out.println("Unable to obtain cookie...");
-        }
         // Create HTTP Request to get Collection Objects
         HttpClient httpClient = HttpClient.newHttpClient();
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(uri + "/api/wireguard/client"))
-                .setHeader("Cookie", loginCookie)
-                .GET().build();
+        HttpRequest httpRequest = createRequest("GET", "/api/wireguard/client", "", "", "");
         HttpResponse response = null;
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -162,6 +151,18 @@ public class WGConnect {
     }
 
     public int createClient(String name){
+        // Create HTTP Request to get Collection Objects
+        String body = new GsonBuilder()
+                .setPrettyPrinting()
+                .create()
+                .toJson(new WGClientCreation(name));
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpRequest httpRequest = createRequest("POST", "/api/wireguard/client", body, "", "");
+        return executeRequest(httpClient, httpRequest);
+
+    }
+
+    public String obtainCookie(){
         String loginCookie = "";
         try {
             loginCookie = this.loginSession().headers().firstValue("set-cookie").get();
@@ -171,18 +172,41 @@ public class WGConnect {
             e.printStackTrace();
             System.out.println("Unable to obtain cookie...");
         }
-        // Create HTTP Request to get Collection Objects
-        String body = new GsonBuilder()
-                .setPrettyPrinting()
-                .create()
-                .toJson(new WGClientCreation(name));
-        HttpClient httpClient = HttpClient.newHttpClient();
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .header("Content-Type", "application/json")
-                .uri(URI.create(uri + "/api/wireguard/client"))
-                .setHeader("Cookie", loginCookie)
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+        return loginCookie;
+    }
+
+    public HttpRequest createRequest(String requestType, String pathuri, String body, String forwarduri, String getparam){
+        String cookie = obtainCookie();
+        switch(requestType){
+            case "GET" -> {
+                return HttpRequest.newBuilder()
+                        .uri(URI.create(uri + pathuri + getparam + "/" + forwarduri))
+                        .setHeader("Cookie", cookie)
+                        .GET()
+                        .build();
+            }
+            case "POST" -> {
+                return HttpRequest.newBuilder()
+                        .uri(URI.create(uri + pathuri))
+                        .setHeader("Cookie", cookie)
+                        .setHeader("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(body))
+                        .build();
+            }
+            case "DELETE" -> {
+                return HttpRequest.newBuilder()
+                        .uri(URI.create(uri + pathuri + getparam + "/" + forwarduri))
+                        .setHeader("Cookie", cookie)
+                        .DELETE()
+                        .build();
+            }
+            default -> {
+                return HttpRequest.newBuilder().build();
+            }
+        }
+    }
+
+    public int executeRequest(HttpClient httpClient, HttpRequest httpRequest){
         HttpResponse response = null;
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -207,9 +231,83 @@ public class WGConnect {
                 System.out.println("HTTP Status is 401 Unauthorized, login unsuccessful.");
                 return 401;
             }
+            case 404 -> {
+                System.out.println("HTTP Status is 404 Not Found. Check URI building.");
+                return 404;
+            }
             default -> {
                 System.out.println("Status code is " + response.statusCode());
                 return response.statusCode();
+            }
+        }
+    }
+
+    public HttpResponse executeRequestAndGetResponse(HttpClient httpClient, HttpRequest httpRequest){
+        HttpResponse response = null;
+        try {
+            response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Problem sending HTTP Request for Session Login");
+        }
+        return response;
+    }
+
+    public int deleteClientById(String id){
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpRequest httpRequest = createRequest("DELETE", "/api/wireguard/client/", "", "", id);
+        return executeRequest(httpClient, httpRequest);
+    }
+
+    public int deleteClientByName(String name){
+        String clientID = getClientIdByName(name);
+        return deleteClientById(clientID);
+
+    }
+    public String getClientIdByName(String name){
+        WGClientCollection clientCollection = getClientCollection();
+        ArrayList<String> returnedClientIDs = new ArrayList<>();
+        //Assumption: one uuid EVER
+        clientCollection.getWGClients().forEach((client) -> {
+//            System.out.println("Name is " + name + " and current client name retrieved is " + client.getName());
+            if (client.getName().equals(name)){
+                returnedClientIDs.add(client.getId());
+            }
+        });
+        if (returnedClientIDs.isEmpty()){
+            return "null";
+        }
+        return returnedClientIDs.get(0);
+    }
+
+    public File getClientConfiguration(String id){
+        File writeTo = new File(id + ".conf");
+        if (writeTo.exists()){
+            return writeTo;
+        }
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpRequest httpRequest = createRequest("GET", "/api/wireguard/client/", "", "configuration", id);
+        HttpResponse response = executeRequestAndGetResponse(httpClient, httpRequest);
+        switch (response.statusCode()){
+            case 200 -> {
+                //Case where it is retrieved successfully and file does not exist.
+                try {
+                    writeTo.createNewFile();
+                    FileWriter writer = new FileWriter(writeTo);
+                    writer.write(response.body().toString());
+                    writer.flush();
+                    writer.close();
+                    return writeTo;
+
+                } catch (Exception e){
+                    System.out.println("Please run the bot in a folder you have access to.");
+                    e.printStackTrace();
+                    return null;
+                }
+
+            }
+            default -> {
+                return null;
             }
         }
     }
