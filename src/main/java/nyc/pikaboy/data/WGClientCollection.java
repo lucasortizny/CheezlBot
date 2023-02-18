@@ -10,6 +10,5 @@ import java.util.List;
  */
 @Data
 public class WGClientCollection {
-//    public WGClient[] WGClients = new WGClient[256];
     public List<WGClient> WGClients = new ArrayList<>();
 }
