@@ -2,12 +2,13 @@ package nyc.pikaboy.listeners;
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import nyc.pikaboy.Main;
 import nyc.pikaboy.internalcommands.CheezlSlashCommands;
 
 public class CheezlSlashCommandListener extends ListenerAdapter {
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
-        System.out.println("Reached Slash Command");
+        Main.logger.debug("Slash Command has been reached.");
         switch (event.getName()) {
             case "newquote" -> {
 //                System.out.println("Reached the newquote");

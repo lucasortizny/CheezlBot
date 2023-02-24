@@ -23,6 +23,7 @@ public class Settings {
     public int randomizerBounds = 2;
     public String wireguarduri;
     public String wireguardPassword;
+    public String cheezlapiuri;
 
 
 //    public String getGuildId() {

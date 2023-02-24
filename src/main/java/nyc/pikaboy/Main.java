@@ -41,7 +41,7 @@ public class Main {
             logger.info("Converting to local Settings file...");
             SETTINGS = SettingsGeneration.getExistingSettings(gson, settingsDestination);
             client = new WGConnect(SETTINGS.getWireguarduri(), SETTINGS.getWireguardPassword());
-            logger.info(String.format("Registering JDA Bot with token %s", SETTINGS.getDiscordToken()));
+            logger.info(String.format("Registering JDA Bot with token...", SETTINGS.getDiscordToken()));
             jda = JDABuilder.createDefault(SETTINGS.getDiscordToken())
                     .addEventListeners(new SomeCustomListener(), new CheezlSlashCommandListener())
                     .build().awaitReady();
