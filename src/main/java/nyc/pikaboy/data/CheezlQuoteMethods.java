@@ -4,7 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nyc.pikaboy.Main;
 import nyc.pikaboy.settings.Settings;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
@@ -15,17 +18,21 @@ import java.util.Optional;
 public class CheezlQuoteMethods {
     public static Optional<CheezlQuote> getRandomQuote(){
         try {
-            Response response = Request.Get(Main.SETTINGS.getCheezlapiuri()+"/quote/random/")
+            Response response = Request.Get(Main.SETTINGS.getCheezlapiuri()+"/quote/random")
                     .execute();
-            if (response.returnResponse().getStatusLine().getStatusCode() == 404){
+            Content content = response.returnContent();
+            if (content.asString() == null || content.asString().isEmpty()){
                 return Optional.empty();
             }
 
 
-            String receivedQuote = response.returnContent()
-                    .asString();
+            String receivedQuote = content.asString();
             return Optional.of(new ObjectMapper().readValue(receivedQuote, CheezlQuote.class));
-        } catch (IOException e) {
+        } catch (HttpResponseException ex){
+            Main.logger.error("Error, most likely because no quotes in DB. Ignoring.");
+            return Optional.empty();
+        }
+        catch (IOException e) {
             Main.logger.error("IO Exception. Printing stack trace.");
             e.printStackTrace();
             return Optional.empty();
@@ -37,7 +44,7 @@ public class CheezlQuoteMethods {
 //        settings.getCheezlQuotesList().add(quote);
         try {
             String bodyToSend = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(quote);
-            Request.Post(Main.SETTINGS.getCheezlapiuri()+"/quote/create/")
+            Request.Post(Main.SETTINGS.getCheezlapiuri()+"/quote/create")
                     .bodyString(bodyToSend, ContentType.APPLICATION_JSON).execute();
         } catch (JsonProcessingException e) {
             Main.logger.error("Problem adding quote. Let's just proceed...");

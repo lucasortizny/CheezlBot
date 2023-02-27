@@ -7,13 +7,20 @@ import nyc.pikaboy.Main;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteMethods;
 import nyc.pikaboy.data.OutgoingKeyCheck;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class represents the Cheezl slash commands functionality needed within the Cheezl Bot!
@@ -33,10 +40,14 @@ public class CheezlSlashCommands {
                 event.getHook().editOriginal("You must supply a quote-key and quote.").queue();
                 return;
             }
+            if (!(keyname.matches("[A-z]*"))){
+                event.getHook().editOriginal("You must supply a quote-key without invalid characters.").queue();
+                return;
+            }
             ObjectWriter writer = new ObjectMapper().writerWithDefaultPrettyPrinter();
             OutgoingKeyCheck keyCheck = new OutgoingKeyCheck(keyname);
             String bodyToSend = writer.writeValueAsString(keyCheck);
-            int statusCode = Request.Get(Main.SETTINGS.getCheezlapiuri()+"/quote/key-exists/"+keyname+"/")
+            int statusCode = Request.Get(Main.SETTINGS.getCheezlapiuri()+"/quote/key-exists/"+keyname)
                     .execute()
                     .returnResponse()
                     .getStatusLine()
@@ -48,11 +59,11 @@ public class CheezlSlashCommands {
             if (statusCode == 404){
                 event.getHook().sendMessage("Currently submitting quote...").queue();
                 CheezlQuoteMethods.addCheezlQuote(Main.SETTINGS, new CheezlQuote(keyname, quote));
-                event.getHook().editOriginal("Quote submitted successfully. ").queueAfter(3L, TimeUnit.SECONDS);
+                event.getHook().editOriginal("Quote submitted succesfully under key: " + keyname).queueAfter(3L, TimeUnit.SECONDS);
 
             }
             else{
-                event.getHook().editOriginal("Key already exists. Please try another key-name.").queueAfter(3L, TimeUnit.SECONDS);
+                event.getHook().editOriginal("Key is in invalid format.").queueAfter(3L, TimeUnit.SECONDS);
             }
 
         } catch (Exception e){
@@ -69,7 +80,7 @@ public class CheezlSlashCommands {
                 event.getHook().editOriginal("Quote key must contain text.").queue();
                 return;
             }
-            int statusCode = Request.Delete(Main.SETTINGS.getCheezlapiuri()+"/quote/delete-key/"+keyname+"/")
+            int statusCode = Request.Delete(Main.SETTINGS.getCheezlapiuri()+"/quote/delete-key/"+keyname)
                     .execute()
                     .returnResponse()
                     .getStatusLine()
@@ -92,47 +103,36 @@ public class CheezlSlashCommands {
 
     public static void listQuotes(SlashCommandEvent event){
         event.deferReply(true).queue();
-        event.getHook().setEphemeral(true).editOriginal(
-                "This feature is currently being rewritten with database support. Please wait for a " +
-                        "future update.")
-                .queue();
-//        try {
-//
-//            event.deferReply(true).queue();
-//            event.getHook().editOriginal("Building Message to send via DMs").queue();
-//            StringBuilder strbuilder = new StringBuilder();
-//            Main.SETTINGS.getCheezlQuotesList().forEach(quote ->{
-//                String append = String.format("**Quote Key**: %s \nQuote: %s\n\n", quote.getKey(), quote.getQuote());
-//                if ((strbuilder.length() + append.length()) > 2000){
-//                    try {
-//                        event.getUser().openPrivateChannel().queue((message) -> {
-//                            message.sendMessage(strbuilder.toString()).queue();
-//                        });
-//                        Thread.sleep(600L);
-//                        strbuilder.delete(0, strbuilder.length());
-//
-//                    } catch (Exception e){
-//                        System.out.println("Normal exception reached. Continue.");
-//                    }
-//                    // Send message in order to clear the String builder.
-//
-//                }
-//                // At this point we assume the String Builder is OK!
-//
-//                strbuilder.append(append);
-//            });
-//            // If we reach here and our String Builder still has strings, let's flush it and get it over with.
-//            if (!strbuilder.isEmpty()){
-//                event.getUser().openPrivateChannel().queue((message) -> {
-//                    message.sendMessage(strbuilder.toString()).queue();
-//                });
-//            }
-//
-//            event.getHook().editOriginal("Message sent via DMs.").queue();
-//        } catch (Exception e){
-//            event.getHook().editOriginal("Quotes aggregation failed. Contact bot owner.").queueAfter(2L, TimeUnit.SECONDS);
-//            e.printStackTrace();
-//        }
+        try{
+            event.getHook().editOriginal("Writing to file now...").queue();
+            String filename = UUID.randomUUID().toString();
+            File fileToSend = new File(filename + ".json");
+            FileWriter writer = new FileWriter(fileToSend);
+            Content content = Request.Get(Main.SETTINGS.getCheezlapiuri() + "/quote/all").execute().returnContent();
+            writer.write(content.asString());
+            writer.flush();
+            event.getMember().getUser().openPrivateChannel().queue((privateChannel -> {
+                privateChannel.sendFile(fileToSend).queue(message -> {
+                    try {
+                        writer.close();
+                        java.nio.file.Files.delete(Path.of(filename + ".json"));
+                    } catch (IOException e) {
+                        Main.logger.error("Unable to delete file.");
+                    }
+                });
+            }));
+//            java.nio.file.Files.delete(Path.of(filename + ".json"));
+            event.getHook().editOriginal("File written and sent to DMs").queue();
+        }
+        catch (IOException ex){
+            Main.logger.error("Unable to remove the file.");
+            event.getHook().editOriginal("No quotes in the DB.").queue();
+        }
+        catch (Exception e){
+            Main.logger.error("Error with sending list of quotes in file. Check log.");
+            event.getHook().editOriginal("File Command has encountered an error. Check the logs.").queue();
+            e.printStackTrace();
+        }
 
     }
 

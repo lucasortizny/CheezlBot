@@ -15,7 +15,7 @@ public class RandomQuoteCommand {
 
     public static void sendRandomizedQuote (JDA jda, Settings settings, MessageReceivedEvent event){
 
-        if (settings.getAllowedTextChannels().contains(event.getChannel().getId())) {
+        if (settings.getAllowedTextChannels().contains(event.getChannel().getId()) && !event.getAuthor().isBot()) {
             Random randnumbergen = new Random();
             int number = randnumbergen.nextInt(0, settings.getRandomizerBounds());
             if (number == 0) {
