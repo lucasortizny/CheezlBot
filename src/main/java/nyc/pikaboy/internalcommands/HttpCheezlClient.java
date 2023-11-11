@@ -4,14 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import nyc.pikaboy.data.OutgoingMessage;
+import nyc.pikaboy.service.CheezlMessageLoggingService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 @Slf4j
+@Component
 public class HttpCheezlClient {
+    CheezlMessageLoggingService cheezlMessageLoggingService;
+    @Autowired
+    HttpCheezlClient(CheezlMessageLoggingService cheezlMessageLoggingService){
+        this.cheezlMessageLoggingService = cheezlMessageLoggingService;
+    }
 
-    public static void submitMessageLog(MessageReceivedEvent event){
+    public void submitMessageLog(MessageReceivedEvent event){
 
         OutgoingMessage message = new OutgoingMessage(
                 event.getAuthor().getAsTag(),
@@ -24,8 +33,7 @@ public class HttpCheezlClient {
         );
 
         try{
-            ObjectMapper mapper = new ObjectMapper();
-            String objectAsJson = mapper.writeValueAsString(message);
+            cheezlMessageLoggingService.submitMessage(message);
         } catch (Exception e){
             log.error("Unable to submit messages.");
         }

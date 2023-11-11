@@ -27,7 +27,8 @@ public class DiscordConfiguration {
                                 @Value("${cheezlbot.allowed-text-channels}") List<String> allowedTextChannels,
                                 @Value("${cheezlbot.api-uri}") String cheezlApiUri,
                                 @Value("${wireguard.uri}") String wireguardUri,
-                                @Value("${wireguard.password}") String wireguardPassword){
+                                @Value("${wireguard.password}") String wireguardPassword,
+                                @Value("${cheezlbot.randomizer-bounds}") Integer randomizerBounds){
         return Settings.builder()
                 .discordToken(discordToken)
                 .guildId(guildId)
@@ -35,6 +36,7 @@ public class DiscordConfiguration {
                 .cheezlapiuri(cheezlApiUri)
                 .wireguarduri(wireguardUri)
                 .wireguardPassword(wireguardPassword)
+                .randomizerBounds(randomizerBounds)
                 .build();
     }
     @Bean

@@ -12,13 +12,15 @@ import org.springframework.stereotype.Component;
 public class SomeCustomListener extends ListenerAdapter {
 
     RandomQuoteService randomQuoteService;
+    HttpCheezlClient httpCheezlClient;
     @Autowired
-    SomeCustomListener(RandomQuoteService randomQuoteService){
+    SomeCustomListener(RandomQuoteService randomQuoteService, HttpCheezlClient httpCheezlClient){
         this.randomQuoteService = randomQuoteService;
+        this.httpCheezlClient = httpCheezlClient;
     }
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        HttpCheezlClient.submitMessageLog(event);
+        this.httpCheezlClient.submitMessageLog(event);
         this.randomQuoteService.sendRandomizedQuote(event);
     }
 
