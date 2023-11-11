@@ -1,0 +1,12 @@
+cheezlbot:
+  discord-token: ""
+  guild-id: ""
+  allowed-text-channels: ""
+  api-uri: ""
+
+wireguard:
+  uri: ""
+  password: ""
+logging:
+  level:
+    root: info
