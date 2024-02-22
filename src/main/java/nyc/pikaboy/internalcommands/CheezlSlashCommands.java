@@ -1,26 +1,25 @@
 package nyc.pikaboy.internalcommands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.gson.Gson;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import nyc.pikaboy.CheezlBot;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteMethods;
-import nyc.pikaboy.data.OutgoingKeyCheck;
 import nyc.pikaboy.service.CheezlQuotesService;
 import nyc.pikaboy.settings.Settings;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -29,17 +28,14 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class CheezlSlashCommands {
 
-    CheezlQuotesService cheezlQuotesService;
-    Settings settings;
-    CheezlQuoteMethods cheezlQuoteMethods;
-    @Autowired
-    CheezlSlashCommands(CheezlQuotesService cheezlQuotesService, Settings settings, CheezlQuoteMethods cheezlQuoteMethods){
-        this.cheezlQuotesService = cheezlQuotesService;
-        this.settings = settings;
-        this.cheezlQuoteMethods = cheezlQuoteMethods;
-    }
+    final CheezlQuotesService cheezlQuotesService;
+    final Settings settings;
+    final CheezlQuoteMethods cheezlQuoteMethods;
+    final Gson gson;
+
 
     /**
      * Creates a new quote for the Cheezl Bot! This method does validation before submitting request
@@ -60,7 +56,7 @@ public class CheezlSlashCommands {
                 event.getHook().editOriginal("You must supply a quote-key without invalid characters.").queue();
                 return;
             }
-            Boolean exists = cheezlQuotesService.quoteExistsByQuoteKey(keyname);
+            boolean exists = cheezlQuotesService.quoteExistsByQuoteKey(keyname);
             if (exists){
                 event.getHook().editOriginal("Key already exists. Please try another key-name.").queueAfter(3L, TimeUnit.SECONDS);
             }
@@ -99,15 +95,14 @@ public class CheezlSlashCommands {
             String filename = UUID.randomUUID().toString();
             File fileToSend = new File(filename + ".json");
             FileWriter writer = new FileWriter(fileToSend);
-            Content content = Request.Get(settings.getCheezlapiuri() + "/quote/all").execute().returnContent();
-            writer.write(content.asString());
+            writer.write(gson.toJson(cheezlQuotesService.getAllQuotes()));
             writer.flush();
             event.getMember().getUser().openPrivateChannel().queue((privateChannel -> {
                 privateChannel.sendFile(fileToSend).queue(message -> {
                     try {
                         writer.close();
                         java.nio.file.Files.delete(Path.of(filename + ".json"));
-                    } catch (IOException e) {
+                    } catch (IOException ignored) {
                     }
                 });
             }));

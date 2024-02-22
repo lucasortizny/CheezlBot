@@ -1,6 +1,5 @@
 package nyc.pikaboy.internalcommands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import nyc.pikaboy.data.OutgoingMessage;

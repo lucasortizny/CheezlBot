@@ -1,6 +1,5 @@
 package nyc.pikaboy.internalcommands;
 
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.service.CheezlQuotesService;

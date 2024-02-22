@@ -1,5 +1,7 @@
 package nyc.pikaboy.config;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -71,6 +73,10 @@ public class DiscordConfiguration {
             log.error("Error registering JDA.", e);
             return null;
         }
+    }
+    @Bean
+    public Gson getGson(){
+        return new GsonBuilder().setPrettyPrinting().create();
     }
 
 }

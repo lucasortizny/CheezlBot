@@ -1,6 +1,9 @@
 package nyc.pikaboy.settings;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import nyc.pikaboy.data.CheezlQuote;
 
 import java.util.ArrayList;
