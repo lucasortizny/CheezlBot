@@ -285,8 +285,8 @@ public class WGConnect {
         return returnedClientIDs.get(0);
     }
 
-    public File getClientConfiguration(String id){
-        File writeTo = new File(id + ".conf");
+    public File getClientConfiguration(String id, String name){
+        File writeTo = new File(name + ".conf");
         if (writeTo.exists()){
             return writeTo;
         }

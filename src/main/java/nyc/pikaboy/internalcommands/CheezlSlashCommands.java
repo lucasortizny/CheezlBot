@@ -10,12 +10,16 @@ import nyc.pikaboy.data.CheezlQuoteMethods;
 import nyc.pikaboy.service.CheezlQuotesService;
 import nyc.pikaboy.settings.Settings;
 import nyc.pikaboy.wireguard.WGConnect;
+import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.KeyGenerator;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -119,11 +123,11 @@ public class CheezlSlashCommands {
     public void getVPN(SlashCommandEvent event){
         event.deferReply(true).queue();
         try {
-            String name = UUID.randomUUID().toString();
+            String name = KeyGenerators.string().generateKey();
             wgConnect.createClient(name);
 //            event.getHook().sendFile(Main.client.getClientConfiguration(Main.client.getClientIdByName(name))).queue();
             event.getUser().openPrivateChannel().queue((privateChannel -> {
-                File configurationFile = wgConnect.getClientConfiguration(wgConnect.getClientIdByName(name));
+                File configurationFile = wgConnect.getClientConfiguration(wgConnect.getClientIdByName(name), name);
                 try {
                     Thread.sleep(200L);
                     System.out.println("Does file exist: " + configurationFile.exists());
