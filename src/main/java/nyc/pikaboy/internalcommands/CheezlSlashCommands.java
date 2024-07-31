@@ -9,17 +9,13 @@ import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteMethods;
 import nyc.pikaboy.service.CheezlQuotesService;
 import nyc.pikaboy.settings.Settings;
-import org.apache.http.client.fluent.Content;
-import org.apache.http.client.fluent.Request;
-import org.springframework.beans.factory.annotation.Autowired;
+import nyc.pikaboy.wireguard.WGConnect;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -31,10 +27,11 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class CheezlSlashCommands {
 
-    final CheezlQuotesService cheezlQuotesService;
-    final Settings settings;
-    final CheezlQuoteMethods cheezlQuoteMethods;
-    final Gson gson;
+    private final CheezlQuotesService cheezlQuotesService;
+    private final CheezlQuoteMethods cheezlQuoteMethods;
+    private final Gson gson;
+    private final WGConnect wgConnect;
+    
 
 
     /**
@@ -123,10 +120,10 @@ public class CheezlSlashCommands {
         event.deferReply(true).queue();
         try {
             String name = UUID.randomUUID().toString();
-            CheezlBot.client.createClient(name);
+            wgConnect.createClient(name);
 //            event.getHook().sendFile(Main.client.getClientConfiguration(Main.client.getClientIdByName(name))).queue();
             event.getUser().openPrivateChannel().queue((privateChannel -> {
-                File configurationFile = CheezlBot.client.getClientConfiguration(CheezlBot.client.getClientIdByName(name));
+                File configurationFile = wgConnect.getClientConfiguration(wgConnect.getClientIdByName(name));
                 try {
                     Thread.sleep(200L);
                     System.out.println("Does file exist: " + configurationFile.exists());

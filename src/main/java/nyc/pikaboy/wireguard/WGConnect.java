@@ -9,6 +9,8 @@ import nyc.pikaboy.data.SessionLogin;
 import nyc.pikaboy.data.WGClient;
 import nyc.pikaboy.data.WGClientCollection;
 import nyc.pikaboy.data.WGClientCreation;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,9 +29,12 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Component
 public class WGConnect {
+    @Value("${wireguard.uri}")
     private String uri;
 
+    @Value("${wireguard.password}")
     private String password;
 
 
