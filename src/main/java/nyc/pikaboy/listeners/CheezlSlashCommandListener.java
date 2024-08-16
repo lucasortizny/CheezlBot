@@ -1,6 +1,6 @@
 package nyc.pikaboy.listeners;
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import nyc.pikaboy.internalcommands.CheezlSlashCommands;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ public class CheezlSlashCommandListener extends ListenerAdapter {
         this.cheezlSlashCommands = cheezlSlashCommands;
     }
     @Override
-    public void onSlashCommand(SlashCommandEvent event) {
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         switch (event.getName()) {
             case "newquote" -> {
 //                System.out.println("Reached the newquote");

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nyc.pikaboy.data.SessionLogin;
 import nyc.pikaboy.data.WGClient;
 import nyc.pikaboy.data.WGClientCollection;
@@ -29,6 +30,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Slf4j
 @Component
 public class WGConnect {
     @Value("${wireguard.uri}")
@@ -59,22 +61,20 @@ public class WGConnect {
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e){
-            e.printStackTrace();
-            System.out.println("Problem sending HTTP Request for Session Login");
+            log.error("Problem sending HTTP Request for Session Login", e);
         }
         if (response == null){
-            System.out.println("Response is nothing...");
-            return null;
+            log.warn("Response is currently null...");
         }
         switch (response.statusCode()){
             case 204 -> {
-                System.out.println("HTTP Status is 200 OK, login succeeded. 204 OK on the POST Request.");
+                log.debug("HTTP Status is 200 OK, login succeeded. 204 OK on the POST Request.");
             }
             case 401 -> {
-                System.out.println("HTTP Status is 401 Unauthorized, login unsuccessful.");
+                log.warn("Unauthorized HTTP request. Did password change?");
             }
             default -> {
-                System.out.println("Status code is " + response.statusCode());
+                log.warn("Status code not expected with status {}" , response.statusCode());
             }
         }
         return response;
@@ -252,8 +252,7 @@ public class WGConnect {
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e){
-            e.printStackTrace();
-            System.out.println("Problem sending HTTP Request for Session Login");
+            log.error("Unable to send HTTP Request for Session Login", e);
         }
         return response;
     }
@@ -305,8 +304,7 @@ public class WGConnect {
                     return writeTo;
 
                 } catch (Exception e){
-                    System.out.println("Please run the bot in a folder you have access to.");
-                    e.printStackTrace();
+                    log.error("Please give Cheezlbot the privileges to access the file. Unable to complete transaction.", e);
                     return null;
                 }
 

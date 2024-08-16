@@ -6,12 +6,11 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import nyc.pikaboy.internalcommands.HttpCheezlClient;
 import nyc.pikaboy.internalcommands.RandomQuoteService;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class SomeCustomListener extends ListenerAdapter {
+public class RandomizedQuoteListener extends ListenerAdapter {
 
     private final RandomQuoteService randomQuoteService;
     private final HttpCheezlClient httpCheezlClient;

@@ -3,23 +3,20 @@ package nyc.pikaboy.internalcommands;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import nyc.pikaboy.CheezlBot;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteMethods;
 import nyc.pikaboy.service.CheezlQuotesService;
-import nyc.pikaboy.settings.Settings;
 import nyc.pikaboy.wireguard.WGConnect;
-import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.KeyGenerator;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Random;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +40,7 @@ public class CheezlSlashCommands {
      * to the API.
      * @param event
      */
-    public void newQuote(SlashCommandEvent event){
+    public void newQuote(SlashCommandInteractionEvent event){
         event.deferReply(true).queue();
         try {
             //start biz validation of key
@@ -73,7 +70,7 @@ public class CheezlSlashCommands {
         }
     }
 
-    public void removeQuote(SlashCommandEvent event) {
+    public void removeQuote(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
         try {
             String keyname = event.getOption("quote-key").getAsString();
@@ -89,7 +86,7 @@ public class CheezlSlashCommands {
         }
     }
     //Leave this method as it is considering the pain in the way I designed the CheezlAPI.
-    public void listQuotes(SlashCommandEvent event){
+    public void listQuotes(SlashCommandInteractionEvent event){
         event.deferReply(true).queue();
         try{
             event.getHook().editOriginal("Writing to file now...").queue();
@@ -99,7 +96,7 @@ public class CheezlSlashCommands {
             writer.write(gson.toJson(cheezlQuotesService.getAllQuotes()));
             writer.flush();
             event.getMember().getUser().openPrivateChannel().queue((privateChannel -> {
-                privateChannel.sendFile(fileToSend).queue(message -> {
+                privateChannel.sendFiles(FileUpload.fromData(fileToSend)).queue(message -> {
                     try {
                         writer.close();
                         java.nio.file.Files.delete(Path.of(filename + ".json"));
@@ -120,7 +117,7 @@ public class CheezlSlashCommands {
 
     }
 
-    public void getVPN(SlashCommandEvent event){
+    public void getVPN(SlashCommandInteractionEvent event){
         event.deferReply(true).queue();
         try {
             String name = KeyGenerators.string().generateKey();
@@ -131,7 +128,7 @@ public class CheezlSlashCommands {
                 try {
                     Thread.sleep(200L);
                     System.out.println("Does file exist: " + configurationFile.exists());
-                    privateChannel.sendFile(configurationFile).queue();
+                    privateChannel.sendFiles(FileUpload.fromData(configurationFile)).queue();
                     Thread.sleep(1000L);
                     configurationFile.delete();
                 } catch (InterruptedException e) {
