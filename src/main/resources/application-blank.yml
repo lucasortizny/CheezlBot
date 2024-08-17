@@ -2,11 +2,9 @@ cheezlbot:
   discord-token: ""
   guild-id: ""
   allowed-text-channels: ""
-  api-uri: ""
+  api-uri: "http://127.0.0.1:8081"
+  randomizer-bounds: 20
 
 wireguard:
-  uri: ""
+  uri: "http://10.0.0.23:51821"
   password: ""
-logging:
-  level:
-    root: info
