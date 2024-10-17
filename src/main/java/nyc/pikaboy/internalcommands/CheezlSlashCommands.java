@@ -104,7 +104,6 @@ public class CheezlSlashCommands {
                     }
                 });
             }));
-//            java.nio.file.Files.delete(Path.of(filename + ".json"));
             event.getHook().editOriginal("File written and sent to DMs").queue();
         }
         catch (IOException ex){

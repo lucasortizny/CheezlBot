@@ -35,7 +35,6 @@ public class RandomQuoteService {
                 retQuote.ifPresent((quote) -> {
                     Objects.requireNonNull(event.getChannel()).sendMessage(quote.getQuote()).queue();
                 });
-            } else {
             }
         }
     }

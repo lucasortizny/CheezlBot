@@ -1,5 +1,6 @@
 package nyc.pikaboy.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteWrapper;
@@ -13,14 +14,9 @@ import java.net.URI;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class CheezlQuotesService {
-    private RestTemplate cheezlApiRestTemplate;
-
-    @Autowired
-    CheezlQuotesService(RestTemplate cheezlApiRestTemplate){
-        this.cheezlApiRestTemplate = cheezlApiRestTemplate;
-    }
-
+    private final RestTemplate cheezlApiRestTemplate;
     public CheezlQuote getQuoteByQuoteKey(String key){
         try {
             log.debug("Making a request to get quote by the quote key {}", key);
