@@ -11,13 +11,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CheezlSlashCommandListener extends ListenerAdapter {
 
-    final CheezlSlashCommands cheezlSlashCommands;
+    private final CheezlSlashCommands cheezlSlashCommands;
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         switch (event.getName()) {
             case "newquote" -> {
-//                System.out.println("Reached the newquote");
                 this.cheezlSlashCommands.newQuote(event);
             }
             case "removequote" -> this.cheezlSlashCommands.removeQuote(event);

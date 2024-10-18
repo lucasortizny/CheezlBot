@@ -2,11 +2,9 @@ package nyc.pikaboy.internalcommands;
 
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import nyc.pikaboy.config.CheezlbotConfiguration;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.service.CheezlQuotesService;
-import nyc.pikaboy.settings.Settings;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -15,21 +13,14 @@ import java.util.Random;
 @Service
 @RequiredArgsConstructor
 public class RandomQuoteService {
-    private CheezlQuotesService cheezlQuotesService;
-    private Settings settings;
-    @Value("${cheezlbot.randomizer-bounds}")
-    private int randomizerBounds;
-    @Autowired
-    RandomQuoteService(CheezlQuotesService cheezlQuotesService, Settings settings){
-        this.cheezlQuotesService = cheezlQuotesService;
-        this.settings = settings;
+    private final CheezlQuotesService cheezlQuotesService;
+    private final CheezlbotConfiguration cheezlbotConfiguration;
 
-    }
     public void sendRandomizedQuote (MessageReceivedEvent event){
 
-        if (settings.getAllowedTextChannels().contains(event.getChannel().getId()) && !event.getAuthor().isBot()) {
+        if (validateAllowedTextChannelAndUser(event)) {
             Random randnumbergen = new Random();
-            int number = randnumbergen.nextInt(0, randomizerBounds);
+            int number = randnumbergen.nextInt(0, cheezlbotConfiguration.getRandomizerBounds());
             if (number == 0) {
                 Optional<CheezlQuote> retQuote = Optional.of(cheezlQuotesService.getRandomQuote());
                 retQuote.ifPresent((quote) -> {
@@ -37,6 +28,10 @@ public class RandomQuoteService {
                 });
             }
         }
+    }
+
+    public boolean validateAllowedTextChannelAndUser(MessageReceivedEvent event){
+        return cheezlbotConfiguration.getAllowedTextChannels().contains(event.getChannel().getId()) && !event.getAuthor().isBot();
     }
 
 }

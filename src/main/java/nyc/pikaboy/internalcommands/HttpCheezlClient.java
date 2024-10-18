@@ -1,5 +1,6 @@
 package nyc.pikaboy.internalcommands;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import nyc.pikaboy.data.OutgoingMessage;
@@ -12,12 +13,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class HttpCheezlClient {
-    CheezlMessageLoggingService cheezlMessageLoggingService;
-    @Autowired
-    HttpCheezlClient(CheezlMessageLoggingService cheezlMessageLoggingService){
-        this.cheezlMessageLoggingService = cheezlMessageLoggingService;
-    }
+    private final CheezlMessageLoggingService cheezlMessageLoggingService;
 
     public void submitMessageLog(MessageReceivedEvent event){
 

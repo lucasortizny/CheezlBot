@@ -15,6 +15,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Deprecated
 @Builder
 public class Settings {
     private String discordToken = "";
