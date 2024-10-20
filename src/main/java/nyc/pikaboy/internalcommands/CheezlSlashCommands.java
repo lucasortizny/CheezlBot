@@ -6,17 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import nyc.pikaboy.data.CheezlQuote;
-import nyc.pikaboy.data.CheezlQuoteMethods;
+import nyc.pikaboy.service.CheezlQuoteUtils;
 import nyc.pikaboy.service.CheezlQuotesService;
 import nyc.pikaboy.wireguard.WGConnect;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 public class CheezlSlashCommands {
 
     private final CheezlQuotesService cheezlQuotesService;
-    private final CheezlQuoteMethods cheezlQuoteMethods;
     private final Gson gson;
     private final WGConnect wgConnect;
     
@@ -42,32 +41,27 @@ public class CheezlSlashCommands {
      */
     public void newQuote(SlashCommandInteractionEvent event){
         event.deferReply(true).queue();
-        try {
             //start biz validation of key
-            String keyname = event.getOption("quote-key").getAsString();
-            String quote = event.getOption("quote").getAsString();
-            if (keyname.isBlank() || quote.isBlank()){
-                event.getHook().editOriginal("You must supply a quote-key and quote.").queue();
-                return;
-            }
-            if (!(keyname.matches("[A-z]*"))){
-                event.getHook().editOriginal("You must supply a quote-key without invalid characters.").queue();
-                return;
-            }
-            boolean exists = cheezlQuotesService.quoteExistsByQuoteKey(keyname);
-            if (exists){
-                event.getHook().editOriginal("Key already exists. Please try another key-name.").queueAfter(3L, TimeUnit.SECONDS);
-            }
-            else {
-                event.getHook().sendMessage("Currently submitting quote...").queue();
-                this.cheezlQuoteMethods.addCheezlQuote(new CheezlQuote(keyname, quote));
-                event.getHook().editOriginal("Quote submitted succesfully under key: " + keyname).queueAfter(3L, TimeUnit.SECONDS);
-            }
-
-        } catch (Exception e){
-            System.out.println("Command invokation failed. Not doing anything :(");
-            e.printStackTrace();
+        String keyname = event.getOption("quote-key").getAsString();
+        String quote = event.getOption("quote").getAsString();
+        if (!CheezlQuoteUtils.validateQuoteKeyPair(keyname, quote)) {
+            event.getHook().editOriginal("Please follow the Cheezlbot usage instruction and try again.").queue();
+            return;
         }
+        Boolean exists = cheezlQuotesService.quoteExistsByQuoteKey(keyname).block();
+        if (Boolean.TRUE.equals(exists)){
+            event.getHook().editOriginal("Key already exists. Please try another key-name.").queueAfter(3L, TimeUnit.SECONDS);
+        }
+        else {
+            event.getHook().sendMessage("Currently submitting quote...").queue();
+            this.cheezlQuotesService.createCheezlQuote(new CheezlQuote(keyname, quote))
+                    .doOnNext(aBoolean -> log.info("Submitted quote with key: {} and quote: {}", keyname, quote))
+                    .doOnNext(aBoolean -> event.getHook().editOriginal("Quote submitted succesfully under key: " + keyname).queueAfter(3L, TimeUnit.SECONDS))
+                    .doOnError(throwable -> log.error("Error submitting quote.", throwable))
+                    .subscribe();
+
+        }
+
     }
 
     public void removeQuote(SlashCommandInteractionEvent event) {
