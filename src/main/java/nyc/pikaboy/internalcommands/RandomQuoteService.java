@@ -4,18 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import nyc.pikaboy.config.CheezlbotConfiguration;
-import nyc.pikaboy.data.CheezlQuote;
-import nyc.pikaboy.service.CheezlQuotesServiceLegacyImpl;
+import nyc.pikaboy.service.CheezlQuotesService;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class RandomQuoteService {
-    private final CheezlQuotesServiceLegacyImpl cheezlQuotesService;
+    private final CheezlQuotesService cheezlQuotesService;
     private final CheezlbotConfiguration cheezlbotConfiguration;
 
     public void sendRandomizedQuote (MessageReceivedEvent event){

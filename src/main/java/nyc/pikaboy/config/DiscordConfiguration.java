@@ -1,19 +1,16 @@
 package nyc.pikaboy.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import nyc.pikaboy.listeners.CheezlSlashCommandListener;
 import nyc.pikaboy.listeners.RandomizedQuoteListener;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @RequiredArgsConstructor
@@ -30,6 +27,7 @@ public class DiscordConfiguration {
             JDA jda;
             jda = JDABuilder.createDefault(cheezlbotConfiguration.getDiscordToken())
                     .addEventListeners(randomizedQuoteListener, cheezlSlashCommandListener)
+                    .enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES)
                     .build().awaitReady();
             log.debug("Registering different commands.");
             jda.getGuildById(cheezlbotConfiguration.getGuildId()).updateCommands().addCommands(

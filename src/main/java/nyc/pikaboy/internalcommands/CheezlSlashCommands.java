@@ -11,7 +11,6 @@ import nyc.pikaboy.service.CheezlQuotesService;
 import nyc.pikaboy.wireguard.WGConnect;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -56,7 +55,7 @@ public class CheezlSlashCommands {
             event.getHook().sendMessage("Currently submitting quote...").queue();
             this.cheezlQuotesService.createCheezlQuote(new CheezlQuote(keyname, quote))
                     .doOnNext(aBoolean -> log.info("Submitted quote with key: {} and quote: {}", keyname, quote))
-                    .doOnNext(aBoolean -> event.getHook().editOriginal("Quote submitted succesfully under key: " + keyname).queueAfter(3L, TimeUnit.SECONDS))
+                    .doOnNext(aBoolean -> event.getHook().editOriginal("Quote submitted succesfully under key: " + keyname).queue())
                     .doOnError(throwable -> log.error("Error submitting quote.", throwable))
                     .subscribe();
 
@@ -87,7 +86,7 @@ public class CheezlSlashCommands {
             String filename = UUID.randomUUID().toString();
             File fileToSend = new File(filename + ".json");
             FileWriter writer = new FileWriter(fileToSend);
-            writer.write(gson.toJson(cheezlQuotesService.getAllQuotes()));
+            writer.write(gson.toJson(cheezlQuotesService.getAllQuotes().block()));
             writer.flush();
             event.getMember().getUser().openPrivateChannel().queue((privateChannel -> {
                 privateChannel.sendFiles(FileUpload.fromData(fileToSend)).queue(message -> {

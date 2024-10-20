@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nyc.pikaboy.data.CheezlQuote;
 import nyc.pikaboy.data.CheezlQuoteWrapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -14,6 +15,7 @@ import java.net.URI;
 
 @Service
 @Slf4j
+@ConditionalOnProperty(prefix = "cheezlbot", name = "legacy-support", havingValue = "true")
 @RequiredArgsConstructor
 public class CheezlQuotesServiceLegacyImpl implements CheezlQuotesService{
     private final RestTemplate cheezlApiRestTemplate;
@@ -32,12 +34,12 @@ public class CheezlQuotesServiceLegacyImpl implements CheezlQuotesService{
             log.debug("Making a request to check if quote exists by key {}", key);
             ResponseEntity<Boolean> response = cheezlApiRestTemplate.getForEntity("/quote/key-exists/" + key, Boolean.class);
             if (response.getStatusCode().is4xxClientError())
-                return Mono.just(false);
+                return Mono.just(Boolean.FALSE);
             else if (response.getStatusCode().is2xxSuccessful())
-                return Mono.just(true);
+                return Mono.just(Boolean.TRUE);
         } catch (RestClientException e){
             log.warn("The API key-exists request was not completed successfully. Either found w/ problems or not found at all.", e);
-            return Mono.just(false);
+            return Mono.just(Boolean.FALSE);
         }
         return Mono.just(true);
     }

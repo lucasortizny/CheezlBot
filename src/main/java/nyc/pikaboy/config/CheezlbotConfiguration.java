@@ -13,6 +13,7 @@ public class CheezlbotConfiguration {
     private String allowedTextChannels;
     private String apiUrl;
     private Integer randomizerBounds;
+    private boolean legacySupport = false;
     private WireguardConfiguration wireguard;
 
     @Data

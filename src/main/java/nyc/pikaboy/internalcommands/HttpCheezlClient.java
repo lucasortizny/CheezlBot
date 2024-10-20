@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import nyc.pikaboy.data.OutgoingMessage;
 import nyc.pikaboy.service.CheezlMessageLoggingService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
