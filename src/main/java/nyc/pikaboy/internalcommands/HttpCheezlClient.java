@@ -31,7 +31,7 @@ public class HttpCheezlClient {
         try{
             cheezlMessageLoggingService.submitMessage(message);
         } catch (Exception e){
-            log.error("Unable to submit messages.");
+            log.error("Unable to submit messages.", e);
         }
 
     }

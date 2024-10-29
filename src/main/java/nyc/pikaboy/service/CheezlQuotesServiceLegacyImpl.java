@@ -16,6 +16,7 @@ import java.net.URI;
 @Service
 @Slf4j
 @ConditionalOnProperty(prefix = "cheezlbot", name = "legacy-support", havingValue = "true")
+@Deprecated
 @RequiredArgsConstructor
 public class CheezlQuotesServiceLegacyImpl implements CheezlQuotesService{
     private final RestTemplate cheezlApiRestTemplate;

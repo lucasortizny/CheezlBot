@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 
 @Component
 @Slf4j
@@ -15,14 +16,6 @@ public class GsonConfiguration {
     private final WebClient cheezlApiWebClient;
     @Bean
     public Gson getGson(){
-//        Flux<?> thing = cheezlApiWebClient
-//                .get()
-//                .uri("/test/woah")
-//                .exchangeToFlux(clientResponse -> {
-//                    log.info("Logging Request Info: {}", String.valueOf(clientResponse.request().getHeaders()));
-//                    return clientResponse.bodyToFlux(String.class);
-//                });
-//        thing.subscribe();
         return new GsonBuilder().setPrettyPrinting().create();
     }
 }
