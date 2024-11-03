@@ -3,7 +3,7 @@ cheezlbot:
   allowed-text-channels: "938190971772993617"
   wireguard:
     uri: "http://localhost:51821"
-  api-url: "http://127.0.0.1:8081"
+  api-url: "http://cheezl-api.pikaboy.nyc"
 spring:
   security:
     oauth2:
