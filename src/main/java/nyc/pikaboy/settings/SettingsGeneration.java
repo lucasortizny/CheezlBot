@@ -1,8 +1,6 @@
 package nyc.pikaboy.settings;
 
 import com.google.gson.Gson;
-import nyc.pikaboy.Main;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
@@ -11,6 +9,7 @@ import java.io.FileWriter;
 /**
  * This class will be responsible for generating the Settings files and checking for validation.
  */
+@Deprecated
 public class SettingsGeneration {
 
     public static boolean checkValidity(Gson gson, String settingDestination){
@@ -22,7 +21,6 @@ public class SettingsGeneration {
             return true;
 
         } catch (Exception e){
-            Main.logger.error("Unable to read file. Check file permissions or destination.");
             e.printStackTrace();
             return false;
 
@@ -42,7 +40,6 @@ public class SettingsGeneration {
 
 
         } catch (Exception e){
-            Main.logger.error("Unable to use file. Check file permissions or destination.");
             e.printStackTrace();
             return false;
         }
@@ -56,7 +53,6 @@ public class SettingsGeneration {
             readFile.close();
             return retSetting;
         } catch (Exception e){
-            Main.logger.error("Unable to get existing settings (is it corrupted?) Generating new settings file...");
             createNewSettings(gson, settingDestination);
             return new Settings();
         }
@@ -68,7 +64,6 @@ public class SettingsGeneration {
             fileWriter.close();
             return true;
         } catch (Exception e){
-            Main.logger.error("Unable to save existing settings. Check file perms.");
             e.printStackTrace();
             return false;
         }

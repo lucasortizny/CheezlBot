@@ -2,13 +2,15 @@ package nyc.pikaboy.wireguard;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import nyc.pikaboy.config.CheezlbotConfiguration;
 import nyc.pikaboy.data.SessionLogin;
 import nyc.pikaboy.data.WGClient;
 import nyc.pikaboy.data.WGClientCollection;
 import nyc.pikaboy.data.WGClientCreation;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,12 +27,11 @@ import java.util.List;
  * weejewel's implementation of the WGEasy.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@RequiredArgsConstructor
+@Slf4j
+@Component
 public class WGConnect {
-    private String uri;
-
-    private String password;
+    private final CheezlbotConfiguration cheezlbotConfiguration;
 
 
 
@@ -40,36 +41,34 @@ public class WGConnect {
      */
     public HttpResponse loginSession(){
         // Create a SessionLogin Object in order to generate JSON
-        SessionLogin login = new SessionLogin(password);
+        SessionLogin login = new SessionLogin(cheezlbotConfiguration.getWireguard().getPassword());
         Gson newGson = new GsonBuilder().setPrettyPrinting().create();
         String ApiLoginStr = newGson.toJson(login);
         // Now create the request
         HttpClient httpClient = HttpClient.newHttpClient();
-        System.out.println("Connecting to " + uri + "/api/session");
+        System.out.println("Connecting to " + cheezlbotConfiguration.getWireguard().getUri() + "/api/session");
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .header("Content-Type", "application/json")
-                .uri(URI.create(uri + "/api/session"))
+                .uri(URI.create(cheezlbotConfiguration.getWireguard().getUri() + "/api/session"))
                 .POST(HttpRequest.BodyPublishers.ofString(ApiLoginStr)).build();
         HttpResponse response = null;
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e){
-            e.printStackTrace();
-            System.out.println("Problem sending HTTP Request for Session Login");
+            log.error("Problem sending HTTP Request for Session Login", e);
         }
         if (response == null){
-            System.out.println("Response is nothing...");
-            return null;
+            log.warn("Response is currently null...");
         }
         switch (response.statusCode()){
             case 204 -> {
-                System.out.println("HTTP Status is 200 OK, login succeeded. 204 OK on the POST Request.");
+                log.debug("HTTP Status is 200 OK, login succeeded. 204 OK on the POST Request.");
             }
             case 401 -> {
-                System.out.println("HTTP Status is 401 Unauthorized, login unsuccessful.");
+                log.warn("Unauthorized HTTP request. Did password change?");
             }
             default -> {
-                System.out.println("Status code is " + response.statusCode());
+                log.warn("Status code not expected with status {}" , response.statusCode());
             }
         }
         return response;
@@ -180,14 +179,14 @@ public class WGConnect {
         switch(requestType){
             case "GET" -> {
                 return HttpRequest.newBuilder()
-                        .uri(URI.create(uri + pathuri + getparam + "/" + forwarduri))
+                        .uri(URI.create(cheezlbotConfiguration.getWireguard().getUri() + pathuri + getparam + "/" + forwarduri))
                         .setHeader("Cookie", cookie)
                         .GET()
                         .build();
             }
             case "POST" -> {
                 return HttpRequest.newBuilder()
-                        .uri(URI.create(uri + pathuri))
+                        .uri(URI.create(cheezlbotConfiguration.getWireguard().getUri() + pathuri))
                         .setHeader("Cookie", cookie)
                         .setHeader("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(body))
@@ -195,7 +194,7 @@ public class WGConnect {
             }
             case "DELETE" -> {
                 return HttpRequest.newBuilder()
-                        .uri(URI.create(uri + pathuri + getparam + "/" + forwarduri))
+                        .uri(URI.create(cheezlbotConfiguration.getWireguard().getUri() + pathuri + getparam + "/" + forwarduri))
                         .setHeader("Cookie", cookie)
                         .DELETE()
                         .build();
@@ -247,8 +246,7 @@ public class WGConnect {
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e){
-            e.printStackTrace();
-            System.out.println("Problem sending HTTP Request for Session Login");
+            log.error("Unable to send HTTP Request for Session Login", e);
         }
         return response;
     }
@@ -280,8 +278,8 @@ public class WGConnect {
         return returnedClientIDs.get(0);
     }
 
-    public File getClientConfiguration(String id){
-        File writeTo = new File(id + ".conf");
+    public File getClientConfiguration(String id, String name){
+        File writeTo = new File(name + ".conf");
         if (writeTo.exists()){
             return writeTo;
         }
@@ -300,8 +298,7 @@ public class WGConnect {
                     return writeTo;
 
                 } catch (Exception e){
-                    System.out.println("Please run the bot in a folder you have access to.");
-                    e.printStackTrace();
+                    log.error("Please give Cheezlbot the privileges to access the file. Unable to complete transaction.", e);
                     return null;
                 }
 

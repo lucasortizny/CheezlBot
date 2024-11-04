@@ -1,22 +1,26 @@
 package nyc.pikaboy.listeners;
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import lombok.RequiredArgsConstructor;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import nyc.pikaboy.Main;
 import nyc.pikaboy.internalcommands.CheezlSlashCommands;
+import org.springframework.stereotype.Component;
 
+@Component
+@RequiredArgsConstructor
 public class CheezlSlashCommandListener extends ListenerAdapter {
+
+    private final CheezlSlashCommands cheezlSlashCommands;
+
     @Override
-    public void onSlashCommand(SlashCommandEvent event) {
-        Main.logger.debug("Slash Command has been reached.");
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         switch (event.getName()) {
             case "newquote" -> {
-//                System.out.println("Reached the newquote");
-                CheezlSlashCommands.newQuote(event);
+                this.cheezlSlashCommands.newQuote(event);
             }
-            case "removequote" -> CheezlSlashCommands.removeQuote(event);
-            case "listquotes" -> CheezlSlashCommands.listQuotes(event);
-            case "vpn-add" -> CheezlSlashCommands.getVPN(event);
+            case "removequote" -> this.cheezlSlashCommands.removeQuote(event);
+            case "listquotes" -> this.cheezlSlashCommands.listQuotes(event);
+            case "vpn-add" -> this.cheezlSlashCommands.getVPN(event);
         }
     }
 }
