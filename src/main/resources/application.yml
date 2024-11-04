@@ -1,0 +1,20 @@
+cheezlbot:
+  discord-token: ${DISCORD_TOKEN}
+  randomizer-bounds: 20
+  wireguard:
+    password: ${WG_PASSWORD}
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          cheezlbot:
+            authorization-grant-type: client_credentials
+            client-secret: ${KC_CLIENT_SECRET}
+            provider: keycloak
+            scope:
+              - openid
+
+        provider:
+          keycloak:
+            issuer-uri: https://auth.pikaboy.nyc/realms/newyork

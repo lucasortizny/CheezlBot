@@ -1,78 +1,69 @@
 package nyc.pikaboy.internalcommands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import nyc.pikaboy.Main;
+import com.google.gson.Gson;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 import nyc.pikaboy.data.CheezlQuote;
-import nyc.pikaboy.data.CheezlQuoteMethods;
-import nyc.pikaboy.data.OutgoingKeyCheck;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.fluent.Content;
-import org.apache.http.client.fluent.Request;
+import nyc.pikaboy.service.CheezlQuoteUtils;
+import nyc.pikaboy.service.CheezlQuotesService;
+import nyc.pikaboy.wireguard.WGConnect;
+import org.springframework.security.crypto.keygen.KeyGenerators;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This class represents the Cheezl slash commands functionality needed within the Cheezl Bot!
  */
+@Component
+@Slf4j
+@RequiredArgsConstructor
 public class CheezlSlashCommands {
 
+    private final CheezlQuotesService cheezlQuotesService;
+    private final Gson gson;
+    private final WGConnect wgConnect;
+    
+
+
     /**
-     * Creates a new quote for the Cheezl Bot!
+     * Creates a new quote for the Cheezl Bot! This method does validation before submitting request
+     * to the API.
      * @param event
      */
-    public static void newQuote(SlashCommandEvent event){
+    public void newQuote(SlashCommandInteractionEvent event){
         event.deferReply(true).queue();
-        try {
-            String keyname = event.getOption("quote-key").getAsString();
-            String quote = event.getOption("quote").getAsString();
-            if (keyname.isBlank() || quote.isBlank()){
-                event.getHook().editOriginal("You must supply a quote-key and quote.").queue();
-                return;
-            }
-            if (!(keyname.matches("[A-z]*"))){
-                event.getHook().editOriginal("You must supply a quote-key without invalid characters.").queue();
-                return;
-            }
-            ObjectWriter writer = new ObjectMapper().writerWithDefaultPrettyPrinter();
-            OutgoingKeyCheck keyCheck = new OutgoingKeyCheck(keyname);
-            String bodyToSend = writer.writeValueAsString(keyCheck);
-            int statusCode = Request.Get(Main.SETTINGS.getCheezlapiuri()+"/quote/key-exists/"+keyname)
-                    .execute()
-                    .returnResponse()
-                    .getStatusLine()
-                    .getStatusCode();
-            if (statusCode == 200){
-                event.getHook().editOriginal("Key already exists. Please try another key-name.").queueAfter(3L, TimeUnit.SECONDS);
-                return;
-            }
-            if (statusCode == 404){
-                event.getHook().sendMessage("Currently submitting quote...").queue();
-                CheezlQuoteMethods.addCheezlQuote(Main.SETTINGS, new CheezlQuote(keyname, quote));
-                event.getHook().editOriginal("Quote submitted succesfully under key: " + keyname).queueAfter(3L, TimeUnit.SECONDS);
-
-            }
-            else{
-                event.getHook().editOriginal("Key is in invalid format.").queueAfter(3L, TimeUnit.SECONDS);
-            }
-
-        } catch (Exception e){
-            System.out.println("Command invokation failed. Not doing anything :(");
-            e.printStackTrace();
+            //start biz validation of key
+        String keyname = event.getOption("quote-key").getAsString();
+        String quote = event.getOption("quote").getAsString();
+        if (!CheezlQuoteUtils.validateQuoteKeyPair(keyname, quote)) {
+            event.getHook().editOriginal("Please follow the Cheezlbot usage instruction and try again.").queue();
+            return;
         }
+        Boolean exists = cheezlQuotesService.quoteExistsByQuoteKey(keyname).block();
+        if (Boolean.TRUE.equals(exists)){
+            event.getHook().editOriginal("Key already exists. Please try another key-name.").queueAfter(3L, TimeUnit.SECONDS);
+        }
+        else {
+            event.getHook().sendMessage("Currently submitting quote...").queue();
+            this.cheezlQuotesService.createCheezlQuote(new CheezlQuote(keyname, quote))
+                    .doOnNext(aBoolean -> log.info("Submitted quote with key: {} and quote: {}", keyname, quote))
+                    .doOnNext(aBoolean -> event.getHook().editOriginal("Quote submitted succesfully under key: " + keyname).queue())
+                    .doOnError(throwable -> log.error("Error submitting quote.", throwable))
+                    .subscribe();
+
+        }
+
     }
 
-    public static void removeQuote(SlashCommandEvent event) {
+    public void removeQuote(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
         try {
             String keyname = event.getOption("quote-key").getAsString();
@@ -80,74 +71,56 @@ public class CheezlSlashCommands {
                 event.getHook().editOriginal("Quote key must contain text.").queue();
                 return;
             }
-            int statusCode = Request.Delete(Main.SETTINGS.getCheezlapiuri()+"/quote/delete-key/"+keyname)
-                    .execute()
-                    .returnResponse()
-                    .getStatusLine()
-                    .getStatusCode();
-            if (statusCode == 200){
-                event.getHook().editOriginal("Deleted quote-key(s) with value of " + keyname).queueAfter(2L, TimeUnit.SECONDS);
-            }
-            else if (statusCode == 404){
-                event.getHook().editOriginal("Quote key not found in Database.").queue();
-            }
-            else {
-                event.getHook().editOriginal("Issue with deletion. Contact developer.").queue();
-            }
+            cheezlQuotesService.deleteQuoteByKey(keyname);
+            event.getHook().editOriginal("Submitted Deletion Request of Quote with key: " + keyname).queueAfter(2L, TimeUnit.SECONDS);
 
         } catch (Exception e){
-            System.out.println("Command invokation failed. Not doing anything :(");
-            e.printStackTrace();
+            log.warn("Issue removing quote.", e);
         }
     }
-
-    public static void listQuotes(SlashCommandEvent event){
+    //Leave this method as it is considering the pain in the way I designed the CheezlAPI.
+    public void listQuotes(SlashCommandInteractionEvent event){
         event.deferReply(true).queue();
         try{
             event.getHook().editOriginal("Writing to file now...").queue();
             String filename = UUID.randomUUID().toString();
             File fileToSend = new File(filename + ".json");
             FileWriter writer = new FileWriter(fileToSend);
-            Content content = Request.Get(Main.SETTINGS.getCheezlapiuri() + "/quote/all").execute().returnContent();
-            writer.write(content.asString());
+            writer.write(gson.toJson(cheezlQuotesService.getAllQuotes().block()));
             writer.flush();
             event.getMember().getUser().openPrivateChannel().queue((privateChannel -> {
-                privateChannel.sendFile(fileToSend).queue(message -> {
+                privateChannel.sendFiles(FileUpload.fromData(fileToSend)).queue(message -> {
                     try {
                         writer.close();
                         java.nio.file.Files.delete(Path.of(filename + ".json"));
-                    } catch (IOException e) {
-                        Main.logger.error("Unable to delete file.");
+                    } catch (IOException ignored) {
                     }
                 });
             }));
-//            java.nio.file.Files.delete(Path.of(filename + ".json"));
             event.getHook().editOriginal("File written and sent to DMs").queue();
         }
         catch (IOException ex){
-            Main.logger.error("Unable to remove the file.");
             event.getHook().editOriginal("No quotes in the DB.").queue();
         }
         catch (Exception e){
-            Main.logger.error("Error with sending list of quotes in file. Check log.");
             event.getHook().editOriginal("File Command has encountered an error. Check the logs.").queue();
             e.printStackTrace();
         }
 
     }
 
-    public static void getVPN(SlashCommandEvent event){
+    public void getVPN(SlashCommandInteractionEvent event){
         event.deferReply(true).queue();
         try {
-            String name = UUID.randomUUID().toString();
-            Main.client.createClient(name);
+            String name = KeyGenerators.string().generateKey();
+            wgConnect.createClient(name);
 //            event.getHook().sendFile(Main.client.getClientConfiguration(Main.client.getClientIdByName(name))).queue();
             event.getUser().openPrivateChannel().queue((privateChannel -> {
-                File configurationFile = Main.client.getClientConfiguration(Main.client.getClientIdByName(name));
+                File configurationFile = wgConnect.getClientConfiguration(wgConnect.getClientIdByName(name), name);
                 try {
                     Thread.sleep(200L);
                     System.out.println("Does file exist: " + configurationFile.exists());
-                    privateChannel.sendFile(configurationFile).queue();
+                    privateChannel.sendFiles(FileUpload.fromData(configurationFile)).queue();
                     Thread.sleep(1000L);
                     configurationFile.delete();
                 } catch (InterruptedException e) {

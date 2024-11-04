@@ -1,25 +1,22 @@
 package nyc.pikaboy.internalcommands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import nyc.pikaboy.Main;
 import nyc.pikaboy.data.OutgoingMessage;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.BasicHttpEntity;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.HttpEntityWrapper;
-import org.apache.http.impl.client.HttpClientBuilder;
+import nyc.pikaboy.service.CheezlMessageLoggingService;
+import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class HttpCheezlClient {
+    private final CheezlMessageLoggingService cheezlMessageLoggingService;
 
-    public static void submitMessageLog(MessageReceivedEvent event){
+    public void submitMessageLog(MessageReceivedEvent event){
 
         OutgoingMessage message = new OutgoingMessage(
                 event.getAuthor().getAsTag(),
@@ -32,12 +29,9 @@ public class HttpCheezlClient {
         );
 
         try{
-            ObjectMapper mapper = new ObjectMapper();
-            String objectAsJson = mapper.writeValueAsString(message);
-            Request.Post(Main.SETTINGS.getCheezlapiuri()+"/message/create")
-                    .bodyString(objectAsJson, ContentType.APPLICATION_JSON).execute();
+            cheezlMessageLoggingService.submitMessage(message);
         } catch (Exception e){
-            log.error("Unable to submit messages.");
+            log.error("Unable to submit messages.", e);
         }
 
     }

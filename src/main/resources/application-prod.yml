@@ -1,0 +1,13 @@
+cheezlbot:
+  guild-id: "458721282620522499"
+  allowed-text-channels: "938190971772993617"
+  wireguard:
+    uri: "http://localhost:51821"
+  api-url: "https://cheezl-api.pikaboy.nyc"
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          cheezlbot:
+            client-id: cheezlbot-prod
