@@ -1,6 +1,10 @@
 cheezlbot:
-  discord-token: ${DISCORD_TOKEN}
   randomizer-bounds: 20
+  discord-configuration:
+    token: ${DISCORD_TOKEN}
+    activity-type: competing
+    activity-message: "GDQ"
+    activity-description: "Support Moo during AGDQ!"
   wireguard:
     password: ${WG_PASSWORD}
 spring:

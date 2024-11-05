@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import nyc.pikaboy.listeners.CheezlSlashCommandListener;
 import nyc.pikaboy.listeners.RandomizedQuoteListener;
@@ -25,9 +27,19 @@ public class DiscordConfiguration {
         try {
             log.debug("Creating the JDA Builder for the Bot.");
             JDA jda;
-            jda = JDABuilder.createDefault(cheezlbotConfiguration.getDiscordToken())
+            jda = JDABuilder.createDefault(cheezlbotConfiguration.getDiscordConfiguration().getToken())
                     .addEventListeners(randomizedQuoteListener, cheezlSlashCommandListener)
-                    .enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES)
+                    .setActivity(Activity.of(
+                            cheezlbotConfiguration.getDiscordConfiguration().getActivityType(),
+                            cheezlbotConfiguration.getDiscordConfiguration().getActivityMessage()
+                            ).withState(cheezlbotConfiguration.getDiscordConfiguration().getActivityDescription()))
+                    .enableIntents(
+                            GatewayIntent.MESSAGE_CONTENT,
+                            GatewayIntent.GUILD_MESSAGES,
+                            GatewayIntent.GUILD_MEMBERS,
+                            GatewayIntent.GUILD_PRESENCES
+                    )
+                    .enableCache(CacheFlag.ACTIVITY)
                     .build().awaitReady();
             log.debug("Registering different commands.");
             jda.getGuildById(cheezlbotConfiguration.getGuildId()).updateCommands().addCommands(
