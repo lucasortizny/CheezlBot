@@ -1,6 +1,6 @@
 cheezlbot:
-  guild-id: "458721282620522499"
-  allowed-text-channels: "938190971772993617"
+  guild-id: "1255358159011188789"
+  allowed-text-channels: "1348118374001016932"
   wireguard:
     uri: "http://localhost:51821"
   api-url: "https://cheezl-api.pikaboy.nyc"
